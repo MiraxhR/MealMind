@@ -70,6 +70,13 @@ if 'user_profile' not in st.session_state:
     st.session_state.user_profile = None
 if 'db_manager' not in st.session_state:
     st.session_state.db_manager = DatabaseManager()
+    # Initialize database tables
+    st.session_state.db_manager.init_database()
+    # Try to load existing user profile
+    try:
+        st.session_state.user_profile = st.session_state.db_manager.get_user_profile()
+    except:
+        st.session_state.user_profile = None
 if 'meal_recommender' not in st.session_state:
     st.session_state.meal_recommender = MealRecommender()
 if 'nutrition_api' not in st.session_state:
@@ -148,21 +155,33 @@ def show_user_profile():
             gender = st.selectbox("Gender", ["Male", "Female"], index=0 if not st.session_state.user_profile else (0 if st.session_state.user_profile.get('gender') == 'Male' else 1))
         
         with col2:
-            activity_level = st.selectbox("Activity Level", [
+            activity_levels = [
                 "Sedentary (little/no exercise)",
                 "Lightly active (light exercise 1-3 days/week)",
                 "Moderately active (moderate exercise 3-5 days/week)",
                 "Very active (hard exercise 6-7 days/week)",
                 "Extremely active (very hard exercise, physical job)"
-            ], index=st.session_state.user_profile.get('activity_level', 1) if st.session_state.user_profile else 1)
+            ]
+            activity_index = 1  # Default to lightly active
+            if st.session_state.user_profile:
+                saved_activity = st.session_state.user_profile.get('activity_level')
+                if saved_activity in activity_levels:
+                    activity_index = activity_levels.index(saved_activity)
+            activity_level = st.selectbox("Activity Level", activity_levels, index=activity_index)
             
-            goal = st.selectbox("Health Goal", [
+            goals = [
                 "Maintain weight",
                 "Lose weight",
                 "Gain weight",
                 "Build muscle",
                 "Improve overall health"
-            ], index=st.session_state.user_profile.get('goal', 0) if st.session_state.user_profile else 0)
+            ]
+            goal_index = 0  # Default to maintain weight
+            if st.session_state.user_profile:
+                saved_goal = st.session_state.user_profile.get('goal')
+                if saved_goal in goals:
+                    goal_index = goals.index(saved_goal)
+            goal = st.selectbox("Health Goal", goals, index=goal_index)
             
             dietary_restrictions = st.multiselect("Dietary Restrictions", [
                 "Vegetarian", "Vegan", "Gluten-free", "Dairy-free", 
