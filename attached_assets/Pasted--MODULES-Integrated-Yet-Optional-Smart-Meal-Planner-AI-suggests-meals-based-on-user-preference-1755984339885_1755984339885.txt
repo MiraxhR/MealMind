@@ -1,0 +1,118 @@
+📦 MODULES (Integrated Yet Optional)
+Smart Meal Planner
+AI suggests meals based on user preferences, allergies, and goals.
+
+Last-Min Diet
+Quick meal ideas for users who decide last minute.
+
+AI Preference Engine
+AI generates meal plans & workouts based on user profile and feedback.
+
+MindfulTrack Route
+Tracks food, hydration, meditation, and mood – a wellness itinerary.
+
+Social Sync
+No influencers needed – track and share via Streamlit dashboard.
+
+Web3 & NFT
+NFT-based rewards for milestones (optional: loyalty badges).
+
+Supplier Panel
+Nutritionists, diet coaches, and food vendors can offer services.
+
+Finance & Commissions
+Tracks user purchases, supplier commissions, automated payments.
+
+Marketing Panel
+AI-boosted campaigns via Streamlit + social media integration.
+
+Event Sync
+List of healthy eating webinars, fitness challenges by date/location.
+
+🤖 ARTIFICIAL INTELLIGENCE AGENTS
+ORION – Backend, logic & architecture
+
+SERENA – User empathy & guidance
+
+NOVA – Handles rewards, tokens, and transactions
+
+LUMINA – Campaigns, dashboard posting
+
+VERA – Tracks food quality, sources
+
+ATLAS – Data analytics & predictions (calorie patterns, goals)
+
+⚙ TECH ARCHITECTURE
+Frontend: Streamlit (interactive UI for meals, charts, logs)
+
+Backend: FastAPI (RESTful API with Pydantic models)
+
+Database: SQLite (user data, food logs, plans)
+
+Auth: JWT (basic login system)
+
+AI Logic: Python functions (meal recommendation, habit scoring)
+
+DevOps: Docker + .env + GitHub Actions
+
+🧑‍💻 DEV TEAM ROLES (optional simulation for presentation)
+Backend Dev (FastAPI & DB)
+
+Frontend Dev (Streamlit UX)
+
+AI Engineer (Meal engine, analysis)
+
+DevOps / Deployment
+
+Data Engineer (Food DB, insights)
+
+UI/UX Designer
+
+🔁 WORKFLOW (Example Flow)
+User logs in via Streamlit frontend
+
+Fills in preferences or connects a wearable device (mock)
+
+AI suggests meal plans or last-minute options
+
+Logs meals, gets progress bar, calories, macros
+
+Supplier/dietitian adds custom diet (from panel)
+
+System tracks points → optional NFT badge awarded
+
+AI shows prediction: “You'll reach your goal in 21 days.”
+
+Summary report + diet suggestions weekly
+
+💡 EXTRAS
+OpenFoodFacts API for real food DB
+
+Plotly/Seaborn for dynamic charts (calories, weight, macro split)
+
+Auth0 or FastAPI JWT for login system
+
+Streamlit sidebar: Filter by diet type (keto, vegan, etc.)
+
+📝 MULTILINGUAL OUTPUT
+App in English → Translate UI to Albanian, Turkish (Streamlit supports it via dictionaries or toggle).
+
+🔒 NFT & TOKEN SYSTEM (Optional)
+Tokens earned for daily logs, goals, etc.
+
+NFT badges minted on milestone (optional: displayed via QR or in Streamlit)
+
+Simulated Web3 using dummy wallet addresses
+
+🚀 Final Output
+FastAPI backend
+
+Streamlit frontend
+
+SQLite DB
+
+PDF export of progress
+
+AI-powered logic
+
+Deployment via Streamlit Cloud or Render
