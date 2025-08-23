@@ -184,6 +184,30 @@ class MealRecommender:
                     'health_benefits': ['protein', 'fiber', 'natural sugars']
                 },
                 {
+                    'name': 'Keto Fat Bomb',
+                    'description': 'High-fat, low-carb energy ball with coconut and nuts',
+                    'ingredients': ['coconut oil', 'almond butter', 'macadamia nuts', 'stevia'],
+                    'calories': 180,
+                    'protein': 4,
+                    'carbs': 3,
+                    'fat': 18,
+                    'preparation_time': 5,
+                    'dietary_tags': ['keto', 'vegetarian', 'gluten-free'],
+                    'health_benefits': ['healthy fats', 'ketogenic']
+                },
+                {
+                    'name': 'Protein Smoothie Bowl',
+                    'description': 'Thick smoothie bowl topped with granola and fruits',
+                    'ingredients': ['protein powder', 'frozen berries', 'banana', 'granola', 'coconut flakes'],
+                    'calories': 280,
+                    'protein': 20,
+                    'carbs': 32,
+                    'fat': 8,
+                    'preparation_time': 8,
+                    'dietary_tags': ['vegetarian', 'gluten-free'],
+                    'health_benefits': ['high protein', 'antioxidants', 'fiber']
+                },
+                {
                     'name': 'Mixed Nuts',
                     'description': 'Portion-controlled mix of raw almonds, walnuts, and cashews',
                     'ingredients': ['almonds', 'walnuts', 'cashews'],
@@ -352,7 +376,7 @@ class MealRecommender:
                         meal_tags = [tag.lower() for tag in meal.get('dietary_tags', [])]
                         restriction_tags = [r.lower() for r in dietary_restrictions]
                         
-                        if not all(restriction in meal_tags for restriction in restriction_tags):
+                        if dietary_restrictions and not all(restriction in meal_tags for restriction in restriction_tags):
                             continue
                     
                     quick_meals.append(quick_meal)

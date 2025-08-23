@@ -7,8 +7,63 @@ import numpy as np
 from database import DatabaseManager
 from meal_recommender import MealRecommender
 from nutrition_api import OpenFoodFactsAPI
-from utils import calculate_bmr, calculate_daily_calories, export_progress_to_csv
+from utils import calculate_bmr, calculate_daily_calories, export_progress_to_csv, format_nutrition_summary
 import os
+import random
+
+def get_ai_coach_message(user_profile):
+    """AI Wellness Coach - Provides personalized coaching messages"""
+    messages = []
+    
+    # Get current time for time-based messages
+    current_hour = datetime.now().hour
+    goal = user_profile.get('goal', '').lower()
+    
+    # Time-based coaching
+    if 6 <= current_hour < 10:
+        messages.append("🌅 Good morning! Start your day with a nutritious breakfast.")
+    elif 11 <= current_hour < 14:
+        messages.append("🌞 Lunch time! Keep your energy up with a balanced meal.")
+    elif 17 <= current_hour < 20:
+        messages.append("🌆 Dinner time! Consider lighter options for the evening.")
+    elif 20 <= current_hour < 23:
+        messages.append("🌙 Evening wind-down. Stay hydrated and avoid late snacking.")
+    
+    # Goal-specific coaching
+    if 'lose weight' in goal:
+        coach_tips = [
+            "Focus on protein and fiber to stay fuller longer",
+            "Try drinking water before meals to help with portion control",
+            "Small, consistent changes lead to lasting results"
+        ]
+        messages.append(random.choice(coach_tips))
+    elif 'gain weight' in goal or 'build muscle' in goal:
+        coach_tips = [
+            "Include protein in every meal to support muscle growth",
+            "Don't forget healthy fats - nuts, avocado, olive oil",
+            "Consistency is key for building muscle mass"
+        ]
+        messages.append(random.choice(coach_tips))
+    else:
+        general_tips = [
+            "Balance is key - aim for variety in your meals",
+            "Listen to your body's hunger and fullness cues",
+            "Small steps lead to big changes over time"
+        ]
+        messages.append(random.choice(general_tips))
+    
+    # Motivational messages
+    motivation = [
+        "You're doing great! Every healthy choice counts.",
+        "Progress, not perfection. Keep going!",
+        "Your future self will thank you for these healthy habits.",
+        "One meal at a time, one day at a time. You've got this!"
+    ]
+    
+    if len(messages) < 2:
+        messages.append(random.choice(motivation))
+    
+    return messages[:2]  # Return max 2 messages to avoid clutter
 
 # Initialize session state
 if 'user_profile' not in st.session_state:
@@ -30,14 +85,35 @@ def main():
     
     st.title("🍎 AI-Powered Meal Planner & Wellness Tracker")
     
+    # AI Wellness Coach sidebar
+    with st.sidebar:
+        st.markdown("---")
+        st.subheader("🤖 AI Wellness Coach")
+        
+        if st.session_state.user_profile:
+            coach_messages = get_ai_coach_message(st.session_state.user_profile)
+            for message in coach_messages:
+                st.info(f"💡 {message}")
+        else:
+            st.info("👋 Set up your profile to get personalized AI coaching!")
+        
+        # Quick stats if user has data
+        recent_meals = st.session_state.db_manager.get_recent_meals(1)
+        if recent_meals:
+            st.metric("Today's Meals", len(recent_meals))
+        
+        st.markdown("---")
+    
     # Sidebar navigation
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", [
         "User Profile", 
-        "Meal Recommendations", 
+        "AI Meal Recommendations", 
+        "Last-Minute Meal Ideas",
         "Food Logging", 
         "Progress Dashboard",
-        "Export Data"
+        "AI Insights & Predictions",
+        "Export & Share Data"
     ])
     
     # Initialize database
@@ -45,13 +121,17 @@ def main():
     
     if page == "User Profile":
         show_user_profile()
-    elif page == "Meal Recommendations":
+    elif page == "AI Meal Recommendations":
         show_meal_recommendations()
+    elif page == "Last-Minute Meal Ideas":
+        show_quick_meals()
     elif page == "Food Logging":
         show_food_logging()
     elif page == "Progress Dashboard":
         show_progress_dashboard()
-    elif page == "Export Data":
+    elif page == "AI Insights & Predictions":
+        show_ai_insights()
+    elif page == "Export & Share Data":
         show_export_data()
 
 def show_user_profile():
@@ -422,50 +502,250 @@ def show_progress_dashboard():
                           markers=True, range_y=[1, 10])
         st.plotly_chart(fig_mood, use_container_width=True)
 
-def show_export_data():
-    st.header("📤 Export Your Data")
+def show_quick_meals():
+    st.header("⚡ Last-Minute Meal Ideas")
+    st.subheader("Quick & Easy Meals Ready in 15 Minutes or Less!")
     
-    st.info("Export your progress data to CSV format for external analysis or backup.")
+    col1, col2 = st.columns([2, 1])
     
-    # Date range for export
-    col1, col2 = st.columns(2)
     with col1:
-        export_start = st.date_input("Export Start Date", value=datetime.now() - timedelta(days=30))
+        dietary_filter = st.multiselect("Filter by Dietary Preferences", [
+            "Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Keto"
+        ])
+    
     with col2:
-        export_end = st.date_input("Export End Date", value=datetime.now())
+        if st.button("Get Quick Ideas", type="primary"):
+            with st.spinner("Finding quick meal ideas..."):
+                quick_meals = st.session_state.meal_recommender.get_quick_meal_ideas(dietary_filter)
+                st.session_state.quick_meals = quick_meals
     
-    export_type = st.selectbox("Select Data Type", [
-        "All Data",
-        "Meal Logs Only", 
-        "Water Intake Only",
-        "Mood Logs Only"
-    ])
-    
-    if st.button("Generate Export"):
-        try:
-            csv_data = export_progress_to_csv(
-                st.session_state.db_manager,
-                export_start.strftime("%Y-%m-%d"),
-                export_end.strftime("%Y-%m-%d"),
-                export_type
-            )
-            
-            if csv_data:
-                st.download_button(
-                    label="Download CSV",
-                    data=csv_data,
-                    file_name=f"wellness_data_{export_start}_{export_end}.csv",
-                    mime="text/csv"
-                )
-                st.success("Export generated successfully!")
-            else:
-                st.warning("No data available for the selected criteria.")
+    # Show quick meal suggestions
+    if hasattr(st.session_state, 'quick_meals') and st.session_state.quick_meals:
+        st.subheader("🍽️ Quick Meal Solutions")
+        
+        for i, meal in enumerate(st.session_state.quick_meals):
+            with st.expander(f"⚡ {meal['name']} - {meal.get('preparation_time', 15)} min", expanded=i == 0):
+                col1, col2 = st.columns([3, 1])
                 
-        except Exception as e:
-            st.error(f"Export failed: {str(e)}")
+                with col1:
+                    st.write(f"**Type:** {meal.get('meal_type', 'Any time')}")
+                    st.write(f"**Description:** {meal['description']}")
+                    st.write(f"**Ingredients:** {', '.join(meal['ingredients'][:5])}...")
+                    
+                    if meal.get('dietary_tags'):
+                        tags_str = " ".join([f"`{tag}`" for tag in meal['dietary_tags']])
+                        st.write(f"**Tags:** {tags_str}")
+                
+                with col2:
+                    st.metric("⏱️ Prep Time", f"{meal.get('preparation_time', 15)} min")
+                    st.metric("🔥 Calories", f"{meal['calories']}")
+                    
+                    if st.button(f"Log This Meal", key=f"quick_log_{i}"):
+                        log_data = {
+                            'meal_name': meal['name'],
+                            'meal_type': meal.get('meal_type', 'Snack'),
+                            'calories': meal['calories'],
+                            'protein': meal.get('protein', 0),
+                            'carbs': meal.get('carbs', 0),
+                            'fat': meal.get('fat', 0),
+                            'date': datetime.now().strftime("%Y-%m-%d"),
+                            'time': datetime.now().strftime("%H:%M")
+                        }
+                        st.session_state.db_manager.log_meal(log_data)
+                        st.success(f"✅ Added {meal['name']} to your log!")
+                        st.rerun()
+    
+    # Emergency meal tips
+    st.subheader("🚨 Emergency Meal Tips")
+    st.info("""
+    **Super Quick Options (under 5 minutes):**
+    • Greek yogurt + berries + granola
+    • Peanut butter banana wrap
+    • Hard-boiled egg + avocado toast
+    • Protein smoothie with frozen fruits
+    • Nuts + cheese + apple slices
+    """)
+
+def show_ai_insights():
+    st.header("🤖 AI Insights & Predictions")
+    
+    if not st.session_state.user_profile:
+        st.warning("⚠️ Please set up your user profile first to get personalized AI insights.")
+        return
+    
+    # Get recent meal data for analysis
+    recent_meals = st.session_state.db_manager.get_recent_meals(14)  # Last 2 weeks
+    
+    if not recent_meals:
+        st.info("📊 No meal data available yet. Start logging meals to get AI insights!")
+        return
+    
+    # Analyze nutrition patterns
+    analysis = st.session_state.meal_recommender.analyze_nutrition_patterns(recent_meals)
+    
+    if 'error' not in analysis:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("📈 Your Nutrition Patterns")
+            st.metric("Average Daily Calories", f"{analysis['avg_calories']}")
+            st.metric("Average Protein", f"{analysis['avg_protein']}g")
+            st.metric("Meals Analyzed", analysis['total_meals_analyzed'])
+            
+        with col2:
+            st.subheader("🍽️ Meal Distribution")
+            if analysis['meal_distribution']:
+                meal_dist_df = pd.DataFrame(list(analysis['meal_distribution'].items()), 
+                                          columns=['Meal Type', 'Count'])
+                fig = px.pie(meal_dist_df, values='Count', names='Meal Type', 
+                           title="Your Meal Type Distribution")
+                st.plotly_chart(fig, use_container_width=True)
+    
+    # AI Predictions & Insights
+    st.subheader("🔮 AI Predictions & Recommendations")
+    
+    target_calories = st.session_state.user_profile.get('daily_calories', 2000)
+    goal = st.session_state.user_profile.get('goal', '').lower()
+    
+    # Generate predictions
+    predictions = []
+    
+    if 'error' not in analysis:
+        avg_calories = analysis['avg_calories']
+        
+        if 'lose weight' in goal:
+            daily_deficit = target_calories - avg_calories
+            if daily_deficit > 0:
+                weeks_to_goal = 4  # Rough estimate
+                predictions.append(f"🎯 At your current pace, you could reach your weight loss goal in approximately {weeks_to_goal} weeks!")
+            else:
+                predictions.append("⚖️ Consider reducing portions slightly to create a calorie deficit for weight loss.")
+        
+        elif 'gain weight' in goal or 'build muscle' in goal:
+            if avg_calories < target_calories:
+                predictions.append("📈 Consider adding healthy, high-calorie snacks to meet your muscle-building goals.")
+            else:
+                predictions.append("💪 Your calorie intake looks good for muscle building! Keep up the protein intake.")
+        
+        # Macro balance prediction
+        protein_ratio = (analysis['avg_protein'] * 4) / avg_calories if avg_calories > 0 else 0
+        if protein_ratio < 0.15:
+            predictions.append("🥩 Increase protein intake - aim for 15-30% of your daily calories from protein.")
+        elif protein_ratio > 0.35:
+            predictions.append("🥗 Consider balancing your protein with more carbs and healthy fats.")
+        else:
+            predictions.append("✅ Your protein intake is well-balanced!")
+    
+    # Display predictions
+    for i, prediction in enumerate(predictions, 1):
+        st.success(f"{i}. {prediction}")
+    
+    # Personalized insights
+    if 'insights' in analysis:
+        st.subheader("💡 Personalized Insights")
+        for insight in analysis['insights']:
+            st.info(f"💡 {insight}")
+    
+    # Goal progress tracking
+    st.subheader("🏆 Goal Progress Tracking")
+    
+    progress_data = st.session_state.db_manager.get_progress_data(
+        (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d"),
+        datetime.now().strftime("%Y-%m-%d")
+    )
+    
+    if progress_data:
+        df = pd.DataFrame(progress_data)
+        df['date'] = pd.to_datetime(df['date'])
+        
+        # Calculate weekly averages for trend
+        df['week'] = df['date'].dt.isocalendar().week
+        weekly_avg = df.groupby('week')['calories'].mean().reset_index()
+        
+        if len(weekly_avg) >= 2:
+            trend = weekly_avg['calories'].iloc[-1] - weekly_avg['calories'].iloc[-2]
+            if abs(trend) > 50:
+                direction = "increasing" if trend > 0 else "decreasing"
+                st.metric("📊 Weekly Calorie Trend", f"{direction.title()}", f"{trend:+.0f} cal/week")
+
+def show_export_data():
+    st.header("📤 Export & Share Your Data")
+    
+    tab1, tab2 = st.tabs(["📊 Export Data", "🌟 Share Progress"])
+    
+    with tab1:
+        st.info("Export your progress data to CSV format for external analysis or backup.")
+        
+        # Date range for export
+        col1, col2 = st.columns(2)
+        with col1:
+            export_start = st.date_input("Export Start Date", value=datetime.now() - timedelta(days=30))
+        with col2:
+            export_end = st.date_input("Export End Date", value=datetime.now())
+        
+        export_type = st.selectbox("Select Data Type", [
+            "All Data",
+            "Meal Logs Only", 
+            "Water Intake Only",
+            "Mood Logs Only"
+        ])
+        
+        if st.button("Generate Export"):
+            try:
+                csv_data = export_progress_to_csv(
+                    st.session_state.db_manager,
+                    export_start.strftime("%Y-%m-%d"),
+                    export_end.strftime("%Y-%m-%d"),
+                    export_type
+                )
+                
+                if csv_data:
+                    st.download_button(
+                        label="Download CSV",
+                        data=csv_data,
+                        file_name=f"wellness_data_{export_start}_{export_end}.csv",
+                        mime="text/csv"
+                    )
+                    st.success("Export generated successfully!")
+                else:
+                    st.warning("No data available for the selected criteria.")
+                    
+            except Exception as e:
+                st.error(f"Export failed: {str(e)}")
+    
+    with tab2:
+        st.subheader("🌟 Share Your Progress")
+        
+        # Generate shareable summary
+        recent_meals = st.session_state.db_manager.get_recent_meals(7)
+        if recent_meals and st.session_state.user_profile:
+            summary = format_nutrition_summary(recent_meals, 7)
+            
+            if 'error' not in summary:
+                st.write("**Your 7-Day Wellness Summary:**")
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Avg Daily Calories", f"{summary['daily_averages']['calories']}")
+                with col2:
+                    st.metric("Meals Logged", summary['total_meals'])
+                with col3:
+                    st.metric("Avg Protein", f"{summary['daily_averages']['protein']}g")
+                
+                # Generate shareable text
+                share_text = f"""🍎 My 7-Day Wellness Summary:
+📊 Average Daily Calories: {summary['daily_averages']['calories']}
+🥩 Average Protein: {summary['daily_averages']['protein']}g
+🍽️ Meals Logged: {summary['total_meals']}
+💪 Keep up the healthy habits!"""
+                
+                st.text_area("📱 Share this summary:", share_text, height=120)
+                st.info("💡 Copy the text above to share your progress on social media!")
+        else:
+            st.info("Start logging meals to generate a shareable summary!")
     
     # Show data summary
-    st.subheader("Data Summary")
+    st.subheader("📈 Data Overview")
     
     total_meals = len(st.session_state.db_manager.get_recent_meals(365))  # Last year
     total_water_logs = len(st.session_state.db_manager.get_water_logs(

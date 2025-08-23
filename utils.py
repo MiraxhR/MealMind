@@ -192,11 +192,11 @@ def export_progress_to_csv(db_manager, start_date: str, end_date: str, export_ty
         csv_content = csv_buffer.getvalue()
         csv_buffer.close()
         
-        return csv_content if csv_content.strip() else None
+        return csv_content if csv_content.strip() else ""
         
     except Exception as e:
         print(f"Error exporting to CSV: {e}")
-        return None
+        return ""
 
 def validate_nutrition_data(calories: float, protein: float, carbs: float, fat: float) -> Dict[str, str]:
     """Validate nutrition data and return any errors"""
