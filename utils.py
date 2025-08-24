@@ -8,7 +8,7 @@ def calculate_bmr(weight: float, height: int, age: int, gender: str) -> float:
     """Calculate Basal Metabolic Rate using Mifflin-St Jeor Equation"""
     if gender.lower() == 'male':
         bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5
-    else:  # female
+    else:  
         bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161
     
     return bmr
@@ -55,7 +55,7 @@ def get_nutrition_insights(daily_totals: Dict, target_calories: float = None) ->
     carbs = daily_totals.get('total_carbs', 0)
     fat = daily_totals.get('total_fat', 0)
     
-    # Calorie insights
+   
     if target_calories:
         calorie_diff = calories - target_calories
         if calorie_diff > 200:
@@ -65,7 +65,7 @@ def get_nutrition_insights(daily_totals: Dict, target_calories: float = None) ->
         else:
             insights.append("Your calorie intake is well-aligned with your target!")
     
-    # Protein insights
+    
     if calories > 0:
         protein_percentage = (protein * 4 / calories) * 100
         if protein_percentage < 10:
@@ -75,7 +75,7 @@ def get_nutrition_insights(daily_totals: Dict, target_calories: float = None) ->
         else:
             insights.append(f"Good protein intake! ({protein_percentage:.1f}% of calories)")
     
-    # Hydration reminder (if applicable)
+    
     if len(insights) < 3:
         insights.append("Don't forget to stay hydrated throughout the day!")
     
@@ -86,26 +86,26 @@ def format_nutrition_summary(meal_logs: List[Dict], days: int = 7) -> Dict:
     if not meal_logs:
         return {'error': 'No meal data available'}
     
-    # Calculate totals
+    
     total_meals = len(meal_logs)
     total_calories = sum(meal.get('calories', 0) for meal in meal_logs)
     total_protein = sum(meal.get('protein', 0) for meal in meal_logs)
     total_carbs = sum(meal.get('carbs', 0) for meal in meal_logs)
     total_fat = sum(meal.get('fat', 0) for meal in meal_logs)
     
-    # Calculate averages
+    
     avg_calories = total_calories / days if days > 0 else 0
     avg_protein = total_protein / days if days > 0 else 0
     avg_carbs = total_carbs / days if days > 0 else 0
     avg_fat = total_fat / days if days > 0 else 0
     
-    # Meal type breakdown
+    
     meal_types = {}
     for meal in meal_logs:
         meal_type = meal.get('meal_type', 'Unknown')
         meal_types[meal_type] = meal_types.get(meal_type, 0) + 1
     
-    # Calculate macro percentages
+   
     macro_percentages = calculate_macro_percentages(total_protein, total_carbs, total_fat)
     
     return {
@@ -134,12 +134,12 @@ def export_progress_to_csv(db_manager, start_date: str, end_date: str, export_ty
         writer = csv.writer(csv_buffer)
         
         if export_type == "All Data":
-            # Export comprehensive data
+            
             writer.writerow(['Export Date', datetime.now().strftime("%Y-%m-%d %H:%M")])
             writer.writerow(['Data Period', f"{start_date} to {end_date}"])
-            writer.writerow([])  # Empty row
+            writer.writerow([])  
             
-            # Meal logs
+            
             meal_data = db_manager.get_progress_data(start_date, end_date)
             if meal_data:
                 writer.writerow(['=== MEAL LOGS ==='])
@@ -149,18 +149,18 @@ def export_progress_to_csv(db_manager, start_date: str, end_date: str, export_ty
                         meal['date'], meal['time'], meal['meal_name'], meal['meal_type'],
                         meal['calories'], meal['protein'], meal['carbs'], meal['fat']
                     ])
-                writer.writerow([])  # Empty row
+                writer.writerow([])  
             
-            # Water logs
+            
             water_data = db_manager.get_water_logs(start_date, end_date)
             if water_data:
                 writer.writerow(['=== WATER INTAKE LOGS ==='])
                 writer.writerow(['Date/Time', 'Amount (ml)'])
                 for water in water_data:
                     writer.writerow([water['date'], water['amount']])
-                writer.writerow([])  # Empty row
+                writer.writerow([])  
             
-            # Mood logs
+            
             mood_data = db_manager.get_mood_logs(start_date, end_date)
             if mood_data:
                 writer.writerow(['=== MOOD LOGS ==='])
@@ -214,11 +214,11 @@ def validate_nutrition_data(calories: float, protein: float, carbs: float, fat: 
     if fat < 0 or fat > 500:
         errors['fat'] = "Fat must be between 0 and 500g"
     
-    # Check if macros roughly match calories (allowing for some variance)
+    
     calculated_calories = (protein * 4) + (carbs * 4) + (fat * 9)
     if calories > 0 and calculated_calories > 0:
         variance = abs(calories - calculated_calories) / calories
-        if variance > 0.5:  # 50% variance threshold
+        if variance > 0.5:  
             errors['macros'] = "Macro breakdown doesn't align well with total calories"
     
     return errors
@@ -230,7 +230,7 @@ def get_meal_timing_insights(meal_logs: List[Dict]) -> List[str]:
     if not meal_logs:
         return ["No meal timing data available for analysis."]
     
-    # Group meals by time of day
+    
     morning_meals = []
     afternoon_meals = []
     evening_meals = []
@@ -249,7 +249,7 @@ def get_meal_timing_insights(meal_logs: List[Dict]) -> List[str]:
         except (ValueError, IndexError):
             continue
     
-    # Generate insights based on timing patterns
+    
     total_meals = len(meal_logs)
     
     if len(morning_meals) / total_meals < 0.2:
@@ -261,7 +261,7 @@ def get_meal_timing_insights(meal_logs: List[Dict]) -> List[str]:
     if len(afternoon_meals) / total_meals > 0.6:
         insights.append("Great job having substantial midday nutrition!")
     
-    # Check for very late meals
+   
     late_meals = sum(1 for meal in meal_logs 
                     if meal.get('time', '').startswith(('21:', '22:', '23:')))
     
@@ -278,12 +278,12 @@ def calculate_weekly_trends(meal_logs: List[Dict]) -> Dict:
     if not meal_logs:
         return {}
     
-    # Convert meal logs to DataFrame for easier analysis
+    
     df = pd.DataFrame(meal_logs)
     df['date'] = pd.to_datetime(df['date'])
     df['week'] = df['date'].dt.isocalendar().week
     
-    # Calculate weekly averages
+    
     weekly_stats = df.groupby('week').agg({
         'calories': ['sum', 'mean', 'count'],
         'protein': ['sum', 'mean'],
