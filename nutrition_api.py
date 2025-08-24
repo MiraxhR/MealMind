@@ -10,20 +10,20 @@ class OpenFoodFactsAPI:
         self.headers = {
             'User-Agent': 'WellnessTracker/1.0 (https://github.com/wellness-tracker)'
         }
-        self.cache = {}  # Simple in-memory cache to avoid repeated requests
+        self.cache = {} 
         
     def search_food(self, query: str, limit: int = 5) -> Optional[Dict]:
         """Search for food items using OpenFoodFacts API"""
         if not query or len(query.strip()) < 2:
             return None
             
-        # Check cache first
+       
         cache_key = f"search_{query.lower().strip()}"
         if cache_key in self.cache:
             return self.cache[cache_key]
         
         try:
-            # Search for products
+           
             search_url = f"{self.base_url}/cgi/search.pl"
             params = {
                 'search_terms': query,
@@ -40,11 +40,11 @@ class OpenFoodFactsAPI:
             data = response.json()
             
             if data.get('products'):
-                # Get the first product with complete nutrition data
+                
                 for product in data['products']:
                     if self._has_nutrition_data(product):
                         nutrition_data = self._extract_nutrition_data(product)
-                        # Cache the result
+                       
                         self.cache[cache_key] = nutrition_data
                         return nutrition_data
             
@@ -118,7 +118,7 @@ class OpenFoodFactsAPI:
             
         except (ValueError, TypeError) as e:
             print(f"Error processing nutrition data: {e}")
-            # Return minimal data structure
+            
             return {
                 'product_name': product.get('product_name', 'Unknown Product'),
                 'brands': product.get('brands', ''),
@@ -137,13 +137,13 @@ class OpenFoodFactsAPI:
         """Get nutrition suggestions based on dietary restrictions"""
         suggestions = []
         
-        # Common healthy foods to suggest
+        
         healthy_foods = [
             'quinoa', 'salmon', 'avocado', 'spinach', 'blueberries',
             'sweet potato', 'almonds', 'greek yogurt', 'broccoli', 'chicken breast'
         ]
         
-        # Filter based on dietary restrictions
+       
         if dietary_restrictions:
             restrictions_lower = [r.lower() for r in dietary_restrictions]
             
@@ -155,13 +155,13 @@ class OpenFoodFactsAPI:
                 healthy_foods = [food for food in healthy_foods 
                                if food not in ['greek yogurt']]
         
-        # Get nutrition data for suggested foods
-        for food in healthy_foods[:5]:  # Limit to 5 suggestions
+       
+        for food in healthy_foods[:5]:  
             nutrition_data = self.search_food(food)
             if nutrition_data:
                 suggestions.append(nutrition_data)
             
-            # Add small delay to be respectful to the API
+            
             time.sleep(0.1)
         
         return suggestions
@@ -173,34 +173,34 @@ class OpenFoodFactsAPI:
         
         ingredients = ingredients_text.lower()
         insights = []
-        quality_score = 50  # Start with neutral score
+        quality_score = 50  
         
-        # Positive indicators
+        
         positive_keywords = [
             'organic', 'natural', 'whole grain', 'fresh', 'pure',
             'virgin', 'unrefined', 'raw', 'free-range'
         ]
         
-        # Negative indicators
+        
         negative_keywords = [
             'artificial', 'preservatives', 'high fructose corn syrup',
             'trans fat', 'hydrogenated', 'monosodium glutamate',
             'artificial colors', 'artificial flavors'
         ]
         
-        # Check for positive indicators
+        
         for keyword in positive_keywords:
             if keyword in ingredients:
                 quality_score += 10
                 insights.append(f"Contains {keyword} - good quality indicator")
         
-        # Check for negative indicators
+        
         for keyword in negative_keywords:
             if keyword in ingredients:
                 quality_score -= 15
                 insights.append(f"Contains {keyword} - consider alternatives")
         
-        # Check ingredient list length (shorter is often better)
+        
         ingredient_count = len(ingredients.split(','))
         if ingredient_count <= 5:
             quality_score += 5
@@ -209,7 +209,7 @@ class OpenFoodFactsAPI:
             quality_score -= 5
             insights.append("Long ingredient list - check for unnecessary additives")
         
-        # Ensure score is within reasonable bounds
+        
         quality_score = max(0, min(100, quality_score))
         
         if not insights:
