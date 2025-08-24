@@ -15,11 +15,11 @@ def get_ai_coach_message(user_profile):
     """AI Wellness Coach - Provides personalized coaching messages"""
     messages = []
     
-    # Get current time for time-based messages
+    
     current_hour = datetime.now().hour
     goal = user_profile.get('goal', '').lower()
     
-    # Time-based coaching
+  
     if 6 <= current_hour < 10:
         messages.append("🌅 Good morning! Start your day with a nutritious breakfast.")
     elif 11 <= current_hour < 14:
@@ -29,7 +29,7 @@ def get_ai_coach_message(user_profile):
     elif 20 <= current_hour < 23:
         messages.append("🌙 Evening wind-down. Stay hydrated and avoid late snacking.")
     
-    # Goal-specific coaching
+    
     if 'lose weight' in goal:
         coach_tips = [
             "Focus on protein and fiber to stay fuller longer",
@@ -52,7 +52,7 @@ def get_ai_coach_message(user_profile):
         ]
         messages.append(random.choice(general_tips))
     
-    # Motivational messages
+    
     motivation = [
         "You're doing great! Every healthy choice counts.",
         "Progress, not perfection. Keep going!",
@@ -63,16 +63,16 @@ def get_ai_coach_message(user_profile):
     if len(messages) < 2:
         messages.append(random.choice(motivation))
     
-    return messages[:2]  # Return max 2 messages to avoid clutter
+    return messages[:2] 
 
-# Initialize session state
+
 if 'user_profile' not in st.session_state:
     st.session_state.user_profile = None
 if 'db_manager' not in st.session_state:
     st.session_state.db_manager = DatabaseManager()
-    # Initialize database tables
+    
     st.session_state.db_manager.init_database()
-    # Try to load existing user profile
+    
     try:
         st.session_state.user_profile = st.session_state.db_manager.get_user_profile()
     except:
@@ -92,7 +92,7 @@ def main():
     
     st.title("🍎 AI-Powered Meal Planner & Wellness Tracker")
     
-    # AI Wellness Coach sidebar
+   
     with st.sidebar:
         st.markdown("---")
         st.subheader("🤖 AI Wellness Coach")
@@ -104,14 +104,14 @@ def main():
         else:
             st.info("👋 Set up your profile to get personalized AI coaching!")
         
-        # Quick stats if user has data
+        
         recent_meals = st.session_state.db_manager.get_recent_meals(1)
         if recent_meals:
             st.metric("Today's Meals", len(recent_meals))
         
         st.markdown("---")
     
-    # Sidebar navigation
+    
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", [
         "User Profile", 
@@ -123,7 +123,7 @@ def main():
         "Export & Share Data"
     ])
     
-    # Initialize database
+    
     st.session_state.db_manager.init_database()
     
     if page == "User Profile":
@@ -162,7 +162,7 @@ def show_user_profile():
                 "Very active (hard exercise 6-7 days/week)",
                 "Extremely active (very hard exercise, physical job)"
             ]
-            activity_index = 1  # Default to lightly active
+            activity_index = 1  
             if st.session_state.user_profile:
                 saved_activity = st.session_state.user_profile.get('activity_level')
                 if saved_activity in activity_levels:
@@ -176,7 +176,7 @@ def show_user_profile():
                 "Build muscle",
                 "Improve overall health"
             ]
-            goal_index = 0  # Default to maintain weight
+            goal_index = 0  
             if st.session_state.user_profile:
                 saved_goal = st.session_state.user_profile.get('goal')
                 if saved_goal in goals:
@@ -194,7 +194,7 @@ def show_user_profile():
         submitted = st.form_submit_button("Save Profile")
         
         if submitted:
-            # Calculate daily calorie needs
+            
             bmr = calculate_bmr(weight, height, age, gender)
             daily_calories = calculate_daily_calories(bmr, activity_level)
             
@@ -212,7 +212,7 @@ def show_user_profile():
                 'bmr': bmr
             }
             
-            # Save to database
+           
             st.session_state.db_manager.save_user_profile(profile_data)
             st.session_state.user_profile = profile_data
             
@@ -220,7 +220,7 @@ def show_user_profile():
             st.info(f"Your estimated daily calorie needs: {daily_calories:.0f} calories")
             st.rerun()
     
-    # Display current profile if exists
+   
     if st.session_state.user_profile:
         st.subheader("Current Profile")
         col1, col2 = st.columns(2)
@@ -265,7 +265,7 @@ def show_meal_recommendations():
                                     st.write(f"**Prep Time:** {meal['preparation_time']} minutes")
                                 
                                 if st.button(f"Log this meal", key=f"log_{i}"):
-                                    # Add to food log
+                                  
                                     log_data = {
                                         'meal_name': meal['name'],
                                         'meal_type': meal_type,
@@ -282,7 +282,7 @@ def show_meal_recommendations():
                                     st.rerun()
                             
                             with col2:
-                                # Nutrition info
+                                
                                 st.metric("Calories", f"{meal['calories']}")
                                 if meal.get('protein'):
                                     st.metric("Protein", f"{meal['protein']}g")
@@ -322,19 +322,19 @@ def show_food_logging():
                             st.error("No nutrition data found for this item.")
             
             with col2:
-                # Manual nutrition input
+               
                 calories = st.number_input("Calories", min_value=0, value=0)
                 protein = st.number_input("Protein (g)", min_value=0.0, value=0.0)
                 carbs = st.number_input("Carbs (g)", min_value=0.0, value=0.0)
                 fat = st.number_input("Fat (g)", min_value=0.0, value=0.0)
             
-            # Show nutrition data if found
+            
             if hasattr(st.session_state, 'nutrition_search_result'):
                 st.subheader("Found Nutrition Data")
                 data = st.session_state.nutrition_search_result
                 st.write(f"**Product:** {data.get('product_name', 'Unknown')}")
                 
-                # Auto-populate form fields
+                
                 calories = data.get('energy_kcal_100g', 0)
                 protein = data.get('proteins_100g', 0)
                 carbs = data.get('carbohydrates_100g', 0)
@@ -357,7 +357,7 @@ def show_food_logging():
                 st.session_state.db_manager.log_meal(log_data)
                 st.success(f"Logged {meal_name} successfully!")
                 
-                # Clear search result
+                
                 if hasattr(st.session_state, 'nutrition_search_result'):
                     del st.session_state.nutrition_search_result
                 
@@ -387,7 +387,7 @@ def show_food_logging():
     with tab3:
         st.subheader("Recent Logs")
         
-        # Show recent meals
+        
         recent_meals = st.session_state.db_manager.get_recent_meals(7)
         if recent_meals:
             st.write("**Recent Meals (Last 7 days):**")
@@ -396,7 +396,7 @@ def show_food_logging():
         else:
             st.info("No meal logs found.")
         
-        # Show today's totals
+        
         today = datetime.now().strftime("%Y-%m-%d")
         daily_totals = st.session_state.db_manager.get_daily_nutrition_totals(today)
         
@@ -416,14 +416,14 @@ def show_food_logging():
 def show_progress_dashboard():
     st.header("📊 Progress Dashboard")
     
-    # Date range selector
+    
     col1, col2 = st.columns(2)
     with col1:
         start_date = st.date_input("Start Date", value=datetime.now() - timedelta(days=30))
     with col2:
         end_date = st.date_input("End Date", value=datetime.now())
     
-    # Get progress data
+    
     progress_data = st.session_state.db_manager.get_progress_data(
         start_date.strftime("%Y-%m-%d"), 
         end_date.strftime("%Y-%m-%d")
@@ -436,7 +436,7 @@ def show_progress_dashboard():
     df = pd.DataFrame(progress_data)
     df['date'] = pd.to_datetime(df['date'])
     
-    # Daily calorie tracking
+    
     st.subheader("📈 Daily Calorie Intake")
     
     daily_calories = df.groupby('date')['calories'].sum().reset_index()
@@ -445,7 +445,7 @@ def show_progress_dashboard():
                           title='Daily Calorie Intake Over Time',
                           markers=True)
     
-    # Add target calorie line if user profile exists
+    
     if st.session_state.user_profile:
         target_calories = st.session_state.user_profile['daily_calories']
         fig_calories.add_hline(y=target_calories, line_dash="dash", 
@@ -453,7 +453,7 @@ def show_progress_dashboard():
     
     st.plotly_chart(fig_calories, use_container_width=True)
     
-    # Macro breakdown
+    
     st.subheader("🥗 Macronutrient Breakdown")
     
     macro_totals = df[['protein', 'carbs', 'fat']].sum()
@@ -467,7 +467,7 @@ def show_progress_dashboard():
     
     st.plotly_chart(fig_macros, use_container_width=True)
     
-    # Weekly averages
+   
     st.subheader("📅 Weekly Averages")
     
     df['week'] = df['date'].dt.isocalendar().week
@@ -481,7 +481,7 @@ def show_progress_dashboard():
     if not weekly_avg.empty:
         st.dataframe(weekly_avg, use_container_width=True)
     
-    # Meal type distribution
+   
     st.subheader("🍽️ Meal Type Distribution")
     
     meal_type_counts = df['meal_type'].value_counts()
@@ -489,7 +489,7 @@ def show_progress_dashboard():
                        title="Number of Logged Meals by Type")
     st.plotly_chart(fig_meals, use_container_width=True)
     
-    # Water and mood tracking if available
+   
     water_data = st.session_state.db_manager.get_water_logs(
         start_date.strftime("%Y-%m-%d"), 
         end_date.strftime("%Y-%m-%d")
@@ -538,7 +538,7 @@ def show_quick_meals():
                 quick_meals = st.session_state.meal_recommender.get_quick_meal_ideas(dietary_filter)
                 st.session_state.quick_meals = quick_meals
     
-    # Show quick meal suggestions
+    
     if hasattr(st.session_state, 'quick_meals') and st.session_state.quick_meals:
         st.subheader("🍽️ Quick Meal Solutions")
         
@@ -574,7 +574,7 @@ def show_quick_meals():
                         st.success(f"✅ Added {meal['name']} to your log!")
                         st.rerun()
     
-    # Emergency meal tips
+    
     st.subheader("🚨 Emergency Meal Tips")
     st.info("""
     **Super Quick Options (under 5 minutes):**
@@ -592,14 +592,14 @@ def show_ai_insights():
         st.warning("⚠️ Please set up your user profile first to get personalized AI insights.")
         return
     
-    # Get recent meal data for analysis
-    recent_meals = st.session_state.db_manager.get_recent_meals(14)  # Last 2 weeks
+    
+    recent_meals = st.session_state.db_manager.get_recent_meals(14) 
     
     if not recent_meals:
         st.info("📊 No meal data available yet. Start logging meals to get AI insights!")
         return
     
-    # Analyze nutrition patterns
+    
     analysis = st.session_state.meal_recommender.analyze_nutrition_patterns(recent_meals)
     
     if 'error' not in analysis:
@@ -620,13 +620,13 @@ def show_ai_insights():
                            title="Your Meal Type Distribution")
                 st.plotly_chart(fig, use_container_width=True)
     
-    # AI Predictions & Insights
+   
     st.subheader("🔮 AI Predictions & Recommendations")
     
     target_calories = st.session_state.user_profile.get('daily_calories', 2000)
     goal = st.session_state.user_profile.get('goal', '').lower()
     
-    # Generate predictions
+   
     predictions = []
     
     if 'error' not in analysis:
@@ -635,7 +635,7 @@ def show_ai_insights():
         if 'lose weight' in goal:
             daily_deficit = target_calories - avg_calories
             if daily_deficit > 0:
-                weeks_to_goal = 4  # Rough estimate
+                weeks_to_goal = 4 
                 predictions.append(f"🎯 At your current pace, you could reach your weight loss goal in approximately {weeks_to_goal} weeks!")
             else:
                 predictions.append("⚖️ Consider reducing portions slightly to create a calorie deficit for weight loss.")
@@ -646,7 +646,7 @@ def show_ai_insights():
             else:
                 predictions.append("💪 Your calorie intake looks good for muscle building! Keep up the protein intake.")
         
-        # Macro balance prediction
+       
         protein_ratio = (analysis['avg_protein'] * 4) / avg_calories if avg_calories > 0 else 0
         if protein_ratio < 0.15:
             predictions.append("🥩 Increase protein intake - aim for 15-30% of your daily calories from protein.")
@@ -655,17 +655,17 @@ def show_ai_insights():
         else:
             predictions.append("✅ Your protein intake is well-balanced!")
     
-    # Display predictions
+    
     for i, prediction in enumerate(predictions, 1):
         st.success(f"{i}. {prediction}")
     
-    # Personalized insights
+    
     if 'insights' in analysis:
         st.subheader("💡 Personalized Insights")
         for insight in analysis['insights']:
             st.info(f"💡 {insight}")
     
-    # Goal progress tracking
+    
     st.subheader("🏆 Goal Progress Tracking")
     
     progress_data = st.session_state.db_manager.get_progress_data(
@@ -677,7 +677,7 @@ def show_ai_insights():
         df = pd.DataFrame(progress_data)
         df['date'] = pd.to_datetime(df['date'])
         
-        # Calculate weekly averages for trend
+       
         df['week'] = df['date'].dt.isocalendar().week
         weekly_avg = df.groupby('week')['calories'].mean().reset_index()
         
@@ -695,7 +695,7 @@ def show_export_data():
     with tab1:
         st.info("Export your progress data to CSV format for external analysis or backup.")
         
-        # Date range for export
+        
         col1, col2 = st.columns(2)
         with col1:
             export_start = st.date_input("Export Start Date", value=datetime.now() - timedelta(days=30))
@@ -735,7 +735,7 @@ def show_export_data():
     with tab2:
         st.subheader("🌟 Share Your Progress")
         
-        # Generate shareable summary
+       
         recent_meals = st.session_state.db_manager.get_recent_meals(7)
         if recent_meals and st.session_state.user_profile:
             summary = format_nutrition_summary(recent_meals, 7)
@@ -751,7 +751,7 @@ def show_export_data():
                 with col3:
                     st.metric("Avg Protein", f"{summary['daily_averages']['protein']}g")
                 
-                # Generate shareable text
+               
                 share_text = f"""🍎 My 7-Day Wellness Summary:
 📊 Average Daily Calories: {summary['daily_averages']['calories']}
 🥩 Average Protein: {summary['daily_averages']['protein']}g
@@ -763,10 +763,10 @@ def show_export_data():
         else:
             st.info("Start logging meals to generate a shareable summary!")
     
-    # Show data summary
+   
     st.subheader("📈 Data Overview")
     
-    total_meals = len(st.session_state.db_manager.get_recent_meals(365))  # Last year
+    total_meals = len(st.session_state.db_manager.get_recent_meals(365))  
     total_water_logs = len(st.session_state.db_manager.get_water_logs(
         (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d"),
         datetime.now().strftime("%Y-%m-%d")
