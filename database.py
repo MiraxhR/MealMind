@@ -12,7 +12,7 @@ class DatabaseManager:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # User profile table
+       
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_profile (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +32,7 @@ class DatabaseManager:
             )
         ''')
         
-        # Meal logs table
+       
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS meal_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +48,7 @@ class DatabaseManager:
             )
         ''')
         
-        # Water intake logs table
+        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS water_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,7 +58,7 @@ class DatabaseManager:
             )
         ''')
         
-        # Mood logs table
+        
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS mood_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,14 +78,14 @@ class DatabaseManager:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            # Check if profile exists
+            
             cursor.execute("SELECT id FROM user_profile LIMIT 1")
             existing = cursor.fetchone()
             
             dietary_restrictions_json = json.dumps(profile_data.get('dietary_restrictions', []))
             
             if existing:
-                # Update existing profile
+                
                 cursor.execute('''
                     UPDATE user_profile SET
                     name = ?, age = ?, weight = ?, height = ?, gender = ?,
@@ -100,7 +100,7 @@ class DatabaseManager:
                     profile_data['daily_calories'], profile_data['bmr'], existing[0]
                 ))
             else:
-                # Insert new profile
+               
                 cursor.execute('''
                     INSERT INTO user_profile 
                     (name, age, weight, height, gender, activity_level, goal, 
