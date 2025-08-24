@@ -6,7 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 class MealRecommender:
     def __init__(self):
-        # Sample meal database - in a real application, this would be more extensive
+       
         self.meals_database = {
             'Breakfast': [
                 {
@@ -242,20 +242,20 @@ class MealRecommender:
             if not available_meals:
                 return []
             
-            # Filter meals based on dietary restrictions
+           
             filtered_meals = self._filter_by_dietary_restrictions(
                 available_meals, 
                 user_profile.get('dietary_restrictions', [])
             )
             
             if not filtered_meals:
-                # If no meals match dietary restrictions, use all available meals
+                
                 filtered_meals = available_meals
             
-            # Score meals based on user profile
+            
             scored_meals = self._score_meals(filtered_meals, user_profile, meal_type)
             
-            # Sort by score and return top recommendations
+           
             scored_meals.sort(key=lambda x: x['ai_score'], reverse=True)
             
             return scored_meals[:num_recommendations]
@@ -275,7 +275,7 @@ class MealRecommender:
             meal_tags = [tag.lower() for tag in meal.get('dietary_tags', [])]
             restriction_tags = [restriction.lower() for restriction in restrictions]
             
-            # Check if meal satisfies all dietary restrictions
+           
             satisfies_restrictions = True
             for restriction in restriction_tags:
                 if restriction not in meal_tags:
@@ -291,7 +291,7 @@ class MealRecommender:
         """Score meals based on user profile and goals"""
         scored_meals = []
         
-        # Calculate target calories per meal based on daily needs
+       
         daily_calories = user_profile.get('daily_calories', 2000)
         meal_calorie_targets = {
             'Breakfast': daily_calories * 0.25,
@@ -306,53 +306,53 @@ class MealRecommender:
             score = 0
             meal_copy = meal.copy()
             
-            # Calorie alignment score (closer to target is better)
+            
             calorie_diff = abs(meal['calories'] - target_calories)
             calorie_score = max(0, 100 - (calorie_diff / target_calories * 100))
             score += calorie_score * 0.3
             
-            # Goal-based scoring
+            
             goal = user_profile.get('goal', '').lower()
             if 'lose weight' in goal:
-                # Prefer lower calorie, higher protein meals
+                
                 if meal['calories'] < target_calories:
                     score += 20
                 if meal.get('protein', 0) > 15:
                     score += 15
             elif 'gain weight' in goal or 'build muscle' in goal:
-                # Prefer higher calorie, higher protein meals
+               
                 if meal['calories'] > target_calories * 0.9:
                     score += 20
                 if meal.get('protein', 0) > 20:
                     score += 20
             elif 'maintain' in goal:
-                # Prefer balanced meals
+                
                 protein_ratio = meal.get('protein', 0) * 4 / meal['calories']
                 if 0.15 <= protein_ratio <= 0.35:  # 15-35% protein
                     score += 15
             
-            # Health benefits score
+            
             health_benefits = meal.get('health_benefits', [])
             score += len(health_benefits) * 2
             
-            # Preparation time score (shorter is generally better)
+            
             prep_time = meal.get('preparation_time', 30)
             if prep_time <= 10:
                 score += 10
             elif prep_time <= 20:
                 score += 5
             
-            # Variety score (randomness to avoid repetition)
+           
             score += random.randint(0, 15)
             
-            # Macro balance score
+            
             total_macros = meal.get('protein', 0) + meal.get('carbs', 0) + meal.get('fat', 0)
             if total_macros > 0:
                 protein_ratio = meal.get('protein', 0) / total_macros
                 carb_ratio = meal.get('carbs', 0) / total_macros
                 fat_ratio = meal.get('fat', 0) / total_macros
                 
-                # Prefer balanced macros
+               
                 if 0.15 <= protein_ratio <= 0.4 and 0.2 <= fat_ratio <= 0.4:
                     score += 10
             
@@ -367,11 +367,11 @@ class MealRecommender:
         
         for meal_type, meals in self.meals_database.items():
             for meal in meals:
-                if meal.get('preparation_time', 30) <= 15:  # 15 minutes or less
+                if meal.get('preparation_time', 30) <= 15:  
                     quick_meal = meal.copy()
                     quick_meal['meal_type'] = meal_type
                     
-                    # Filter by dietary restrictions if provided
+                    
                     if dietary_restrictions:
                         meal_tags = [tag.lower() for tag in meal.get('dietary_tags', [])]
                         restriction_tags = [r.lower() for r in dietary_restrictions]
@@ -381,30 +381,30 @@ class MealRecommender:
                     
                     quick_meals.append(quick_meal)
         
-        # Sort by preparation time
+        
         quick_meals.sort(key=lambda x: x.get('preparation_time', 30))
         
-        return quick_meals[:6]  # Return top 6 quick meals
+        return quick_meals[:6]  
     
     def analyze_nutrition_patterns(self, meal_logs: List[Dict]) -> Dict:
         """Analyze user's nutrition patterns and provide insights"""
         if not meal_logs:
             return {'error': 'No meal data available for analysis'}
         
-        # Calculate averages
+        
         total_meals = len(meal_logs)
         avg_calories = sum(meal.get('calories', 0) for meal in meal_logs) / total_meals
         avg_protein = sum(meal.get('protein', 0) for meal in meal_logs) / total_meals
         avg_carbs = sum(meal.get('carbs', 0) for meal in meal_logs) / total_meals
         avg_fat = sum(meal.get('fat', 0) for meal in meal_logs) / total_meals
         
-        # Meal type distribution
+       
         meal_types = {}
         for meal in meal_logs:
             meal_type = meal.get('meal_type', 'Unknown')
             meal_types[meal_type] = meal_types.get(meal_type, 0) + 1
         
-        # Generate insights
+       
         insights = []
         
         if avg_protein < 15:
